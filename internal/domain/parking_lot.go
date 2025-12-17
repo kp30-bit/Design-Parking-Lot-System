@@ -15,16 +15,17 @@ func NewParkingLot() *ParkingLot {
 	}
 }
 
-func (pl *ParkingLot) Park(v Vehicle) (*Ticket, error) {
-	slotType := v.GetSlot()
-	for _, parkingFloor := range pl.floors {
-		parkingSlot := parkingFloor.GetFreeSlot(slotType)
-		if parkingSlot != nil {
-			parkingSlot.Park(v)
-			return NewTicket(GetNewTicketId(), parkingSlot.GetId(), v.GetNo(), int(slotType)*10, parkingSlot.level, v.GetSlot()), nil
-		}
-	}
-	return nil, errors.New("Couldn't find a parking for your vehicle\n")
+func (pl *ParkingLot) Park(v Vehicle, parkingSlot *ParkingSlot) (*Ticket, error) {
+
+	parkingSlot.Park(v)
+	return &Ticket{
+		ticket_id:      GetNewTicketId(),
+		parkingSlot_id: parkingSlot.GetId(),
+		vehicleNo:      v.GetNo(),
+		price:          (int(v.GetType()) + 1) * 10, // base price based on the vehicle
+		level:          parkingSlot.level,
+		slotType:       parkingSlot.GetSlotType(),
+	}, nil
 }
 
 func (pl *ParkingLot) UnPark(t *Ticket) error {
@@ -52,4 +53,12 @@ func (pl *ParkingLot) ShowAllParkedVehicles() {
 			}
 		}
 	}
+}
+
+func (pl *ParkingLot) GetParkingFloorMap() map[int]*ParkingFloor {
+	tempMap := make(map[int]*ParkingFloor)
+	for k, v := range pl.floors {
+		tempMap[k] = v
+	}
+	return tempMap
 }

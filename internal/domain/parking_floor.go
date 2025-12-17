@@ -24,15 +24,14 @@ func (pf *ParkingFloor) GetAllSlots() map[int]*ParkingSlot {
 	return mapcopy
 }
 
-func (pf *ParkingFloor) GetFreeSlot(slotType SlotType) *ParkingSlot {
-	for _, v := range pf.mp {
-		if v.isAvail && v.slotType == slotType {
-			return v
-		}
-	}
-	return nil
-}
-
 func (pf *ParkingFloor) AddParkingSlot(ps *ParkingSlot) {
 	pf.mp[ps.id] = ps
+}
+
+func (pf *ParkingFloor) GetParkingFloorMap() map[int]*ParkingSlot {
+	tempMap := make(map[int]*ParkingSlot)
+	for key, val := range pf.mp {
+		tempMap[key] = val
+	}
+	return tempMap
 }

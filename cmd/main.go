@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"parking-lot-system/internal/domain"
 	"parking-lot-system/internal/managers"
 )
 
 func main() {
+	//intial setup
 	car := domain.NewCar(123, domain.CarType)
 	bike := domain.NewBike(456, domain.BikeType)
 
@@ -28,19 +28,12 @@ func main() {
 	level2.AddParkingSlot(parkingSlot3)
 	level2.AddParkingSlot(parkingSlot4)
 
-	parkingLotMgr := managers.NewParkingLotMgr(parkingLot)
-
-	ticket, err := parkingLotMgr.Park(car)
-	if err != nil {
-		fmt.Errorf("Failed to park your vehicle : %v", err)
-	}
 	ticketMgr := managers.NewTicketMgr()
-	ticketMgr.AddTicket(ticket)
-
-	ticket2, err := parkingLotMgr.Park(bike)
-	ticketMgr.AddTicket(ticket2)
-
-	// parkingLotMgr.Unpark(ticket)
-	ticketMgr.ShowAllTickets()
+	strategyMgr := managers.NewStrategyMgr()
+	parkingLotMgr := managers.NewParkingLotMgr(parkingLot, strategyMgr, ticketMgr)
+	ticket, _ := parkingLotMgr.Park(car, domain.ClosestAvailableParking)
+	parkingLotMgr.Unpark(ticket)
+	parkingLotMgr.Park(bike, domain.ClosestAvailableParking)
 	parkingLotMgr.ParkingLot.ShowAllParkedVehicles()
+
 }
