@@ -1,0 +1,154 @@
+@startuml
+!theme plain
+skinparam classAttributeIconSize 0
+
+package "Domain Layer" {
+    class ParkingLot {
+        - floors: map[int]*ParkingFloor
+        + NewParkingLot()
+        + Park(v Vehicle, parkingSlot *ParkingSlot): *Ticket
+        + UnPark(t *Ticket): error
+        + AddFloor(pf *ParkingFloor)
+        + ShowAllParkedVehicles()
+        + GetParkingFloorMap(): map[int]*ParkingFloor
+    }
+
+    class ParkingFloor {
+        - level: int
+        - mp: map[int]*ParkingSlot
+        + NewParkingFloor(level int): *ParkingFloor
+        + GetLevel(): int
+        + GetAllSlots(): map[int]*ParkingSlot
+        + AddParkingSlot(ps *ParkingSlot)
+        + GetParkingFloorMap(): map[int]*ParkingSlot
+    }
+
+    class ParkingSlot {
+        - id: int
+        - level: int
+        - slotType: SlotType
+        - vehicle: Vehicle
+        - isAvail: bool
+        + NewParkingSlot(level int, st SlotType, v Vehicle, isAvail bool): *ParkingSlot
+        + IsAvailable(): bool
+        + GetSlotType(): SlotType
+        + GetVehicle(): Vehicle, error
+        + GetId(): int
+        + Park(v Vehicle)
+        + Unpark()
+    }
+
+    interface Vehicle {
+        + GetNo(): int
+        + GetType(): VehicleType
+        + GetSlot(): SlotType
+    }
+
+    class Car {
+        - number: int
+        - vehicleType: VehicleType
+        + NewCar(n int, vt VehicleType): *Car
+        + GetNo(): int
+        + GetType(): VehicleType
+        + GetSlot(): SlotType
+    }
+
+    class Bike {
+        - number: int
+        - vehicleType: VehicleType
+        + NewBike(n int, vt VehicleType): *Bike
+        + GetNo(): int
+        + GetType(): VehicleType
+        + GetSlot(): SlotType
+    }
+
+    class Ticket {
+        - ticket_id: int
+        - parkingSlot_id: int
+        - vehicleNo: int
+        - price: int
+        - level: int
+        - slotType: SlotType
+        + NewTicket(tid, pid, no, price, level int, slotType SlotType): *Ticket
+        + GetTicketId(): int
+        + GetParkingSlotId(): int
+        + GetVehicle(): int
+        + GetPrice(): int
+        + GetLevel(): int
+    }
+
+    enum VehicleType {
+        CarType
+        BikeType
+        TruckType
+    }
+
+    enum SlotType {
+        CarSlot
+        BikeSlot
+        TruckSlot
+    }
+
+    enum ParkingStrategy {
+        ClosestAvailableParking
+        RandomAvailableParking
+    }
+}
+
+package "Interface Layer" {
+    interface IParkingStrategy {
+        + GetFreeSlot(slotType SlotType): *ParkingSlot, error
+    }
+}
+
+package "Usecase Layer" {
+    class ClosestAvailableParkingStrategy {
+        - FloorMap: map[int]*ParkingFloor
+        + NewClosestAvailableParkingStrategy(mp map[int]*ParkingFloor): *ClosestAvailableParkingStrategy
+        + GetFreeSlot(slotType SlotType): *ParkingSlot, error
+    }
+}
+
+package "Managers Layer" {
+    class ParkingLotMgr {
+        - ParkingLot: *ParkingLot
+        - StrategyMgr: *StrategyMgr
+        - TicketMgr: *TicketMgr
+        + NewParkingLotMgr(pl *ParkingLot, st *StrategyMgr, t *TicketMgr): *ParkingLotMgr
+        + Park(v Vehicle, strategy ParkingStrategy): *Ticket, error
+        + Unpark(ticket *Ticket)
+    }
+
+    class StrategyMgr {
+        + NewStrategyMgr(): *StrategyMgr
+        + SelectStrategy(inputStrategy ParkingStrategy, ParkingFloorMap map[int]*ParkingFloor): IParkingStrategy
+    }
+
+    class TicketMgr {
+        - mp: map[int]*Ticket
+        + NewTicketMgr(): *TicketMgr
+        + AddTicket(ticket *Ticket)
+        + ShowAllTickets()
+    }
+}
+
+' Relationships
+ParkingLot "1" *-- "many" ParkingFloor : contains
+ParkingFloor "1" *-- "many" ParkingSlot : contains
+ParkingSlot "1" o-- "0..1" Vehicle : references
+ParkingSlot ..> SlotType : uses
+Car ..|> Vehicle : implements
+Bike ..|> Vehicle : implements
+Ticket ..> SlotType : uses
+Ticket ..> ParkingSlot : references\n(via ID)
+
+IParkingStrategy <|.. ClosestAvailableParkingStrategy : implements
+ClosestAvailableParkingStrategy o-- ParkingFloor : uses
+
+ParkingLotMgr *-- ParkingLot : contains
+ParkingLotMgr *-- StrategyMgr : contains
+ParkingLotMgr *-- TicketMgr : contains
+StrategyMgr ..> IParkingStrategy : creates
+TicketMgr o-- Ticket : manages
+
+@enduml
